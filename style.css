@@ -22,27 +22,34 @@ head {
 }
 
 title {
+    font-size: 162pt;
+    background:
+            linear-gradient(
+                    50deg,
+                    rgb(218, 196, 255)37%,
+                    rgb(167, 214, 194)71%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     display: block;
-    color: #656565;
     text-align: center;
-    font-size: 24pt;
+    padding:28px 0 3px;
+    -webkit-user-select: none;
+    cursor: default;
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
 }
 
 body {
     position: relative;
     height: 800px;
-    margin: 0 auto;
+    margin: 340px auto;
     width: 600px;
     border: 18px ridge #FFECFC;
-    background:
-            linear-gradient(
-                    060deg,
-                    rgba(101, 47, 160, 0.14)50%,
-                    rgba(255, 255, 255, 0.93)50%);
+    background: linear-gradient(
+            56.4deg,
+            rgb(228, 220, 242)52%,
+            rgba(255, 255, 255, 0.93)52%);
 }
 
 canvas {
@@ -56,10 +63,23 @@ spool {
     border-radius: 50%;
     /*background-color: rebeccapurple;*/
     border: 18px solid transparent;
+    
 }
 
 spool:hover {
-    border-color: #FFE7E7;
+    background: ghostwhite;
+    cursor: -webkit-grab;
+}
+
+spool.draggable {
+    background: ghostwhite;
+    cursor: -webkit-grabbing!important;
+}
+
+spool.draggable input {
+    border-color: transparent;
+    /*background:transparent;*/
+    background: purple;
 }
 
 input {

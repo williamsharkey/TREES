@@ -12,8 +12,13 @@ $('focus1').on('focus', () => {
     $('input[tabindex=${'+finalTabIndex+'}]').focus();
 });
 
+var tabFocus = false;
+
 body.on('focus', 'input', function(e) {
-    play(e.currentTarget.tabIndex - 2);
+    if (!tabFocus) {
+        play(e.currentTarget.tabIndex - 2);
+    }
+    tabFocus = false;
 });
 
 function makebox(e) {
@@ -36,8 +41,18 @@ function kill(e) {
     e.stopPropagation();
 }
 
+window.onfocus = (e) => {
+    tabFocus = true;
+};
 
 body.on('click', makebox).on('click', 'spool', kill);
+
+function preventFocusSteal(e) {
+    e.preventDefault();
+}
+
+body.on('mousedown', 'spool', preventFocusSteal);
+
 
 function makeCanvas() {
     const canvas = $('canvas')[0];
@@ -56,25 +71,36 @@ body.on("mousedown", "spool", drag).on("mouseup", ".draggable", drop);
 body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
 
 function drag(e) {
-    var el = $(e.currentTarget);
+    const el = $(e.currentTarget);
     el.attr('unselectable', 'on').addClass('draggable');
-    let cleared = false;
-    const el_w = $('.draggable').outerWidth(), el_h = $('.draggable').outerHeight();
+    //let cleared = false;
+    //const el_w = $('.draggable').outerWidth();
+    //const el_h = $('.draggable').outerHeight();
+
+
+
     body.on("mousemove", e => {
         if ($dragging) {
-            if (!cleared) {
+            //if (!cleared) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                cleared = true;
-            }
-            const y = e.pageY - el_h / 2;
-            const x = e.pageX - el_w / 2;
+         //       cleared = true;
+            drawLines();
+            //}
+
+            const y = e.pageY + offTop;
+            const x = e.pageX + offLeft;
             $dragging.offset({
                 top: y,
                 left: x
             });
         }
     });
-    $dragging = $(e.target);
+    $dragging = el;
+    const dOff = $dragging.offset();
+    const offTop = dOff.top - e.pageY;
+    const offLeft = dOff.left - e.pageX;
+    console.log({offTop:offTop, offLeft:offLeft});
+
 }
 
 var $dragging = null;
@@ -83,13 +109,13 @@ function drop(e) {
     var el = $(e.currentTarget);
     $dragging = null;
     el.removeAttr('unselectable').removeClass('draggable');
-    drawLines();
+    //drawLines();
 }
 
 
 function sortH(a, b) {
-    const an = a.getBoundingClientRect().top;
-    const bn = b.getBoundingClientRect().top;
+    const an = a.getElementsByTagName('input')[0].getBoundingClientRect().top;
+    const bn = b.getElementsByTagName('input')[0].getBoundingClientRect().top;
 
     if (an > bn) {
         return 1;
@@ -106,20 +132,27 @@ function drawLines() {
     const canvasRect = canvas.getBoundingClientRect();
     const canLeft = canvasRect.left;
     const canTop = canvasRect.top;
-    const halfW = arr[0].offsetWidth / 2;
-    const H = arr[0].offsetHeight;
+    //const sp = arr[0];
+    //let n = arr[0].firstChild;
+    let n = arr[0].getElementsByTagName('input')[0];
+    let nRect = n.getBoundingClientRect();
+    const nW = n.offsetWidth/2;
+    const nH = n.offsetHeight;
 
-    let a = arr[0].getBoundingClientRect();
-    arr[0].firstChild.tabIndex = 2;
+    n.tabIndex = 2;
     ctx.beginPath();
-    ctx.moveTo(a.left - canLeft + halfW, a.top - canTop + H - 1);
+    ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
     for (let i = 1; i < arr.length; i++) {
+        n = arr[i].getElementsByTagName('input')[0];
+        n.tabIndex = i + 2;
+        nRect = n.getBoundingClientRect();
 
-        arr[i].firstChild.tabIndex = i + 2;
-        a = arr[i].getBoundingClientRect();
 
-        ctx.lineTo(a.left - canLeft + halfW, a.top - canTop + 1);
-        ctx.moveTo(a.left - canLeft + halfW, a.top - canTop + H - 1);
+        ctx.lineTo(nRect.left - canLeft + nW, nRect.top - canTop);
+        ctx.moveTo(0,nRect.top - canTop);
+        ctx.lineTo(canvas.width, nRect.top - canTop);
+        ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
+        console.log(nW,nH,nRect.left,nRect.top,canLeft,canTop);
 
     }
     finalTabIndex = arr.length + 1;
@@ -134,13 +167,14 @@ const audio = new window.AudioContext();
 function createOscillator(freq) {
     const attack = 0;
     const decay = 200;
+    const volume = 0.02;
     const gain = audio.createGain();
     const osc = audio.createOscillator();
 
     gain.connect(audio.destination);
     gain.gain.setValueAtTime(0, audio.currentTime);
-    gain.gain.linearRampToValueAtTime(1, audio.currentTime + attack / 1000);
-    gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + decay / 1000);
+    gain.gain.linearRampToValueAtTime(volume, audio.currentTime + attack / 1000);
+    gain.gain.exponentialRampToValueAtTime(volume * 0.01, audio.currentTime + decay / 1000);
 
     osc.frequency.value = freq;
     osc.type = "square";
