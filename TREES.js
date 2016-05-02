@@ -1,104 +1,95 @@
-/**
- * Created by wm on 5/1/16.
- */
-$('focus2').on('focus', function() {
-    // "last" focus guard got focus: set focus to the first field
+"use strict";
+
+const body = $('body');
+
+let finalTabIndex = 1;
+
+$('focus2').on('focus', () => {
     $('input[tabindex=2]').focus();
-
 });
 
-var finalTabIndex = 1;
-
-$('focus1').on('focus', function() {
-    console.log("try to focus on " + finalTabIndex);
-    // "first" focus guard got focus: set focus to the last field
-    $('input[tabindex=' + finalTabIndex + ']').focus();
+$('focus1').on('focus', () => {
+    $('input[tabindex=${'+finalTabIndex+'}]').focus();
 });
 
-$('body').on('focus', 'input', function() {
-    play(this.tabIndex - 2);
+body.on('focus', 'input', function(e) {
+    play(e.currentTarget.tabIndex - 2);
 });
 
 function makebox(e) {
-
-    var box = $("<div><input maxlength=8>");
-
+    const box = $("<spool><input maxlength=8>");
     $('canvas').after(box);
-
-    var y = e.pageY;
-
-    var x = e.pageX;
-
-    var w = box.width();
-
-    var h = box.height();
-
+    const y = e.pageY;
+    const x = e.pageX;
+    const w = box.width();
+    const h = box.height();
     box.offset({
         top: y - h / 2,
         left: x - w / 2
     });
-
-
-    ctx.clearRect(0, 0, c.width, c.height);
-
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawLines();
-
     box.focus();
 }
 
 function kill(e) {
-
     e.stopPropagation();
-
 }
 
 
-var body = $('body');
+body.on('click', makebox).on('click', 'spool', kill);
 
-body.on('click', makebox);
+function makeCanvas() {
+    const canvas = $('canvas')[0];
+    canvas.width = body.width();
+    canvas.height = body.height();
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 0.6;
+    ctx.strokestyle = "black";
+    ctx.lineJoin = "round";
+    return {canvas, ctx};
+}
 
-body.on('click', 'input', kill);
+const {canvas,ctx} = makeCanvas();
 
-var c = $('canvas')[0];
-c.width = $('body').width();
-c.height = $('body').height();
-var ctx = c.getContext("2d");
-ctx.lineWidth = 0.6;
-// ctx.lineCap = "round";
-// ctx.strokeStyle = "#524E73";
-ctx.strokestyle = "black";
-ctx.lineJoin = "round";
-//ctx.setLineDash([10, 15]);
+body.on("mousedown", "spool", drag).on("mouseup", ".draggable", drop);
+body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
 
-
-
-function drag2(e) {
-    $(this).attr('unselectable', 'on').addClass('draggable');
-    var cleared = false;
-    var el_w = $('.draggable').outerWidth(),
-        el_h = $('.draggable').outerHeight();
-    $('body').on("mousemove", function(e) {
-
+function drag(e) {
+    var el = $(e.currentTarget);
+    el.attr('unselectable', 'on').addClass('draggable');
+    let cleared = false;
+    const el_w = $('.draggable').outerWidth(), el_h = $('.draggable').outerHeight();
+    body.on("mousemove", e => {
         if ($dragging) {
             if (!cleared) {
-                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 cleared = true;
             }
-            var y = e.pageY - el_h / 2;
-            var x = e.pageX - el_w / 2;
+            const y = e.pageY - el_h / 2;
+            const x = e.pageX - el_w / 2;
             $dragging.offset({
                 top: y,
                 left: x
             });
-
         }
     });
     $dragging = $(e.target);
 }
 
+var $dragging = null;
+
+function drop(e) {
+    var el = $(e.currentTarget);
+    $dragging = null;
+    el.removeAttr('unselectable').removeClass('draggable');
+    drawLines();
+}
+
+
 function sortH(a, b) {
-    var an = a.getBoundingClientRect().top;
-    var bn = b.getBoundingClientRect().top;
+    const an = a.getBoundingClientRect().top;
+    const bn = b.getBoundingClientRect().top;
 
     if (an > bn) {
         return 1;
@@ -109,21 +100,22 @@ function sortH(a, b) {
     return 0;
 }
 
-function drawLines() {
-    var arr = $('input').sort(sortH).toArray();
-    var canvasRect = c.getBoundingClientRect();
-    var canLeft = canvasRect.left;
-    var canTop = canvasRect.top;
-    var halfW = arr[0].offsetWidth / 2;
-    var H = arr[0].offsetHeight;
 
-    var a = arr[0].getBoundingClientRect();
-    arr[0].tabIndex = 2;
+function drawLines() {
+    const arr = $('spool').sort(sortH).toArray();
+    const canvasRect = canvas.getBoundingClientRect();
+    const canLeft = canvasRect.left;
+    const canTop = canvasRect.top;
+    const halfW = arr[0].offsetWidth / 2;
+    const H = arr[0].offsetHeight;
+
+    let a = arr[0].getBoundingClientRect();
+    arr[0].firstChild.tabIndex = 2;
     ctx.beginPath();
     ctx.moveTo(a.left - canLeft + halfW, a.top - canTop + H - 1);
-    for (var i = 1; i < arr.length; i++) {
+    for (let i = 1; i < arr.length; i++) {
 
-        arr[i].tabIndex = i + 2;
+        arr[i].firstChild.tabIndex = i + 2;
         a = arr[i].getBoundingClientRect();
 
         ctx.lineTo(a.left - canLeft + halfW, a.top - canTop + 1);
@@ -134,31 +126,16 @@ function drawLines() {
     ctx.stroke();
 }
 
-function drop2(e) {
-    $dragging = null;
-    $(this).removeAttr('unselectable').removeClass('draggable');
-    drawLines();
-}
 
 
+const audio = new window.AudioContext();
 
-
-var $dragging = null;
-
-$('body').on("mousedown", "input", drag2).on("mouseup", ".draggable", drop2);
-
-
-
-
-var audio = new window.AudioContext();
-
-//setInterval(play, 1000 / 4);
 
 function createOscillator(freq) {
-    var attack = 0;
-    var decay = 200;
-    var gain = audio.createGain();
-    var osc = audio.createOscillator();
+    const attack = 0;
+    const decay = 200;
+    const gain = audio.createGain();
+    const osc = audio.createOscillator();
 
     gain.connect(audio.destination);
     gain.gain.setValueAtTime(0, audio.currentTime);
@@ -170,15 +147,15 @@ function createOscillator(freq) {
     osc.connect(gain);
     osc.start(0);
 
-    setTimeout(function() {
+    setTimeout(() => {
         osc.stop(0);
         osc.disconnect(gain);
         gain.disconnect(audio.destination);
     }, decay)
 }
 
-function TryParseInt(str,defaultValue) {
-    var retValue = defaultValue;
+function int(str, defaultValue) {
+    let retValue = defaultValue;
     if(str !== null) {
         if(str.length > 0) {
             if (!isNaN(str)) {
@@ -190,7 +167,8 @@ function TryParseInt(str,defaultValue) {
 }
 
 function play(i) {
-    var str = $('input[tabindex=2]').val();
-    var scale = TryParseInt(str, 12);
-    createOscillator(100 * Math.pow(2, (i - 2) / scale ));
+    const str = $('input[tabindex=2]').val();
+    const scale = int(str, 12);
+    const freq = 100 * Math.pow(2, (i - 2) / scale );
+    createOscillator(freq);
 }

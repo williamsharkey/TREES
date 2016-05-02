@@ -24,49 +24,61 @@ head {
 title {
     display: block;
     color: #656565;
-    /*background: ghostwhite;*/
     text-align: center;
     font-size: 24pt;
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    /*-webkit-text-stroke: 8px white;*/
 }
 
 body {
-    /*background: #00FFA1;*/
-    /*background: #FCFCFF;*/
     position: relative;
     height: 800px;
     margin: 0 auto;
     width: 600px;
     border: 18px ridge #FFECFC;
-    background: linear-gradient(060deg, rgba(101, 47, 160, 0.14)50%, rgba(255, 255, 255, 0.93)50%);
+    background:
+            linear-gradient(
+                    060deg,
+                    rgba(101, 47, 160, 0.14)50%,
+                    rgba(255, 255, 255, 0.93)50%);
 }
 
 canvas {
     width: 100%;
     display: block;
     height: 100%;
-    /*background: #FFF8AA;*/
+}
+
+spool {
+    position: absolute;
+    border-radius: 50%;
+    /*background-color: rebeccapurple;*/
+    border: 18px solid transparent;
+}
+
+spool:hover {
+    border-color: #FFE7E7;
 }
 
 input {
-    position: absolute;
-    /*border: .4em dashed red;*/
     border: 4px double #524E73;
     width: 84px;
     height: 84px;
     border-radius: 50%;
     background-color: #FFF5FD;
-    font-family: "helvetica neue";
+    font-family: "helvetica neue", sans-serif;
     text-align: center;
     font-size: 8pt;
 }
 
 input:focus {
     outline: none;
-    box-shadow: inset 0 0 0 2px white, inset 0 0 0 3px #B166D0, inset 0 0 0 5px white, inset 0 0 0 6px #8E8E8E;
+    box-shadow:
+            inset 0 0 0 2px white,
+            inset 0 0 0 3px #B166D0,
+            inset 0 0 0 5px white,
+            inset 0 0 0 6px #8E8E8E;
     background: white;
 }
