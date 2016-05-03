@@ -1,16 +1,20 @@
 "use strict";
 
-const body = $('body');
+var body = $('body');
 
-let finalTabIndex = 1;
+var finalTabIndex = 1;
 
-$('focus2').on('focus', () => {
+$('focus2').on('focus', ForwardWrap);
+
+function ForwardWrap() {
     $('input[tabindex=2]').focus();
-});
+}
 
-$('focus1').on('focus', () => {
-    $('input[tabindex=${'+finalTabIndex+'}]').focus();
-});
+$('focus1').on('focus', backwardsWrap);
+
+function backwardsWrap() {
+    $('input[tabindex=${' + finalTabIndex + '}]').focus();
+}
 
 var tabFocus = false;
 
@@ -22,12 +26,12 @@ body.on('focus', 'input', function(e) {
 });
 
 function makebox(e) {
-    const box = $("<spool><input maxlength=8>");
+    var box = $("<spool><input maxlength=8>");
     $('canvas').after(box);
-    const y = e.pageY;
-    const x = e.pageX;
-    const w = box.width();
-    const h = box.height();
+    var y = e.pageY;
+    var x = e.pageX;
+    var w = box.width();
+    var h = box.height();
     box.offset({
         top: y - h / 2,
         left: x - w / 2
@@ -41,9 +45,11 @@ function kill(e) {
     e.stopPropagation();
 }
 
-window.onfocus = (e) => {
+window.onfocus = markTabFocused;
+
+function markTabFocused(e) {
     tabFocus = true;
-};
+}
 
 body.on('click', makebox).on('click', 'spool', kill);
 
@@ -55,50 +61,51 @@ body.on('mousedown', 'spool', preventFocusSteal);
 
 
 function makeCanvas() {
-    const canvas = $('canvas')[0];
+    var canvas = $('canvas')[0];
     canvas.width = body.width();
     canvas.height = body.height();
-    const ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext("2d");
     ctx.lineWidth = 0.6;
     ctx.strokestyle = "black";
     ctx.lineJoin = "round";
     return {canvas, ctx};
 }
 
-const {canvas,ctx} = makeCanvas();
+var {canvas,ctx} = makeCanvas();
 
 body.on("mousedown", "spool", drag).on("mouseup", ".draggable", drop);
 body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
 
 function drag(e) {
-    const el = $(e.currentTarget);
+    var el = $(e.currentTarget);
     el.attr('unselectable', 'on').addClass('draggable');
-    //let cleared = false;
-    //const el_w = $('.draggable').outerWidth();
-    //const el_h = $('.draggable').outerHeight();
+    //var cleared = false;
+    //var el_w = $('.draggable').outerWidth();
+    //var el_h = $('.draggable').outerHeight();
 
+    body.on("mousemove", mouseMoveDrag);
 
-
-    body.on("mousemove", e => {
+    function mouseMoveDrag(e) {
         if ($dragging) {
             //if (!cleared) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-         //       cleared = true;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //       cleared = true;
             drawLines();
             //}
 
-            const y = e.pageY + offTop;
-            const x = e.pageX + offLeft;
+            var y = e.pageY + offTop;
+            var x = e.pageX + offLeft;
             $dragging.offset({
                 top: y,
                 left: x
             });
         }
-    });
+    }
+
     $dragging = el;
-    const dOff = $dragging.offset();
-    const offTop = dOff.top - e.pageY;
-    const offLeft = dOff.left - e.pageX;
+    var dOff = $dragging.offset();
+    var offTop = dOff.top - e.pageY;
+    var offLeft = dOff.left - e.pageX;
     console.log({offTop:offTop, offLeft:offLeft});
 
 }
@@ -114,8 +121,8 @@ function drop(e) {
 
 
 function sortH(a, b) {
-    const an = a.getElementsByTagName('input')[0].getBoundingClientRect().top;
-    const bn = b.getElementsByTagName('input')[0].getBoundingClientRect().top;
+    var an = a.getElementsByTagName('input')[0].getBoundingClientRect().top;
+    var bn = b.getElementsByTagName('input')[0].getBoundingClientRect().top;
 
     if (an > bn) {
         return 1;
@@ -128,21 +135,21 @@ function sortH(a, b) {
 
 
 function drawLines() {
-    const arr = $('spool').sort(sortH).toArray();
-    const canvasRect = canvas.getBoundingClientRect();
-    const canLeft = canvasRect.left;
-    const canTop = canvasRect.top;
-    //const sp = arr[0];
-    //let n = arr[0].firstChild;
-    let n = arr[0].getElementsByTagName('input')[0];
-    let nRect = n.getBoundingClientRect();
-    const nW = n.offsetWidth/2;
-    const nH = n.offsetHeight;
+    var arr = $('spool').sort(sortH).toArray();
+    var canvasRect = canvas.getBoundingClientRect();
+    var canLeft = canvasRect.left;
+    var canTop = canvasRect.top;
+    //var sp = arr[0];
+    //var n = arr[0].firstChild;
+    var n = arr[0].getElementsByTagName('input')[0];
+    var nRect = n.getBoundingClientRect();
+    var nW = n.offsetWidth/2;
+    var nH = n.offsetHeight;
 
     n.tabIndex = 2;
     ctx.beginPath();
     ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
-    for (let i = 1; i < arr.length; i++) {
+    for (var i = 1; i < arr.length; i++) {
         n = arr[i].getElementsByTagName('input')[0];
         n.tabIndex = i + 2;
         nRect = n.getBoundingClientRect();
@@ -160,16 +167,15 @@ function drawLines() {
 }
 
 
-
-const audio = new window.AudioContext();
+var audio = new webkitAudioContext();
 
 
 function createOscillator(freq) {
-    const attack = 0;
-    const decay = 200;
-    const volume = 0.02;
-    const gain = audio.createGain();
-    const osc = audio.createOscillator();
+    var attack = 0;
+    var decay = 200;
+    var volume = 0.02;
+    var gain = audio.createGain();
+    var osc = audio.createOscillator();
 
     gain.connect(audio.destination);
     gain.gain.setValueAtTime(0, audio.currentTime);
@@ -181,15 +187,16 @@ function createOscillator(freq) {
     osc.connect(gain);
     osc.start(0);
 
-    setTimeout(() => {
+    setTimeout(audioTimeout, decay)
+    function audioTimeout() {
         osc.stop(0);
         osc.disconnect(gain);
         gain.disconnect(audio.destination);
-    }, decay)
+    }
 }
 
 function int(str, defaultValue) {
-    let retValue = defaultValue;
+    var retValue = defaultValue;
     if(str !== null) {
         if(str.length > 0) {
             if (!isNaN(str)) {
@@ -201,8 +208,8 @@ function int(str, defaultValue) {
 }
 
 function play(i) {
-    const str = $('input[tabindex=2]').val();
-    const scale = int(str, 12);
-    const freq = 100 * Math.pow(2, (i - 2) / scale );
+    var str = $('input[tabindex=2]').val();
+    var scale = int(str, 12);
+    var freq = 100 * Math.pow(2, (i - 2) / scale );
     createOscillator(freq);
 }
