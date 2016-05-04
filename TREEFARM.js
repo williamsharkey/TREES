@@ -25,7 +25,7 @@ body.on('focus', 'input', function(e) {
     tabFocus = false;
 });
 
-function makebox(e) {
+function makeBox(e) {
     var box = $("<spool><input maxlength=8>");
     $('canvas').after(box);
     var y = e.pageY;
@@ -51,7 +51,7 @@ function markTabFocused(e) {
     tabFocus = true;
 }
 
-body.on('click', makebox).on('click', 'spool', kill);
+body.on('click', makeBox).on('click', 'spool', kill);
 
 function preventFocusSteal(e) {
     e.preventDefault();
@@ -65,8 +65,8 @@ function makeCanvas() {
     canvas.width = body.width();
     canvas.height = body.height();
     var ctx = canvas.getContext("2d");
-    ctx.lineWidth = 0.6;
-    ctx.strokestyle = "black";
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "black";
     ctx.lineJoin = "round";
     return {canvas, ctx};
 }
@@ -79,26 +79,19 @@ body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
 function drag(e) {
     var el = $(e.currentTarget);
     el.attr('unselectable', 'on').addClass('draggable');
-    //var cleared = false;
-    //var el_w = $('.draggable').outerWidth();
-    //var el_h = $('.draggable').outerHeight();
 
     body.on("mousemove", mouseMoveDrag);
 
     function mouseMoveDrag(e) {
         if ($dragging) {
-            //if (!cleared) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            //       cleared = true;
-            drawLines();
-            //}
-
             var y = e.pageY + offTop;
             var x = e.pageX + offLeft;
             $dragging.offset({
                 top: y,
                 left: x
             });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawLines();
         }
     }
 
@@ -134,32 +127,61 @@ function sortH(a, b) {
 }
 
 
+function drawBoundingSquare(nRect, canTop, canLeft,i,n) {
+
+    ctx.beginPath();
+    var topOfInput = Math.round(nRect.top - canTop) + 0.5;
+    ctx.moveTo(0, topOfInput);
+    ctx.lineTo(canvas.width, topOfInput);
+    ctx.strokeStyle = "hsl(" + (360*i/n) + ",90%,80%)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    var botOfInput = Math.round(nRect.bottom - canTop) - 0.5;
+    ctx.moveTo(0, botOfInput);
+    ctx.lineTo(canvas.width, botOfInput);
+    ctx.stroke();
+
+    ctx.beginPath();
+    var leftOfInput = Math.round(nRect.left - canLeft) + 0.5;
+    ctx.moveTo(leftOfInput, 0);
+    ctx.lineTo(leftOfInput, canvas.height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    var rightOfInput = Math.round(nRect.right - canLeft) - 0.5;
+    ctx.moveTo(rightOfInput, 0);
+    ctx.lineTo(rightOfInput, canvas.height);
+    ctx.stroke();
+
+}
+
 function drawLines() {
     var arr = $('spool').sort(sortH).toArray();
     var canvasRect = canvas.getBoundingClientRect();
     var canLeft = canvasRect.left;
     var canTop = canvasRect.top;
-    //var sp = arr[0];
-    //var n = arr[0].firstChild;
-    var n = arr[0].getElementsByTagName('input')[0];
-    var nRect = n.getBoundingClientRect();
-    var nW = n.offsetWidth/2;
-    var nH = n.offsetHeight;
+    var len = arr.length;
 
-    n.tabIndex = 2;
-    ctx.beginPath();
-    ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
-    for (var i = 1; i < arr.length; i++) {
-        n = arr[i].getElementsByTagName('input')[0];
+    for (var i = 0; i < len; i++) {
+
+        var n = arr[i].getElementsByTagName('input')[0];
+        var nRect = n.getBoundingClientRect();
+        var nW = n.offsetWidth/2;
+        var nH = n.offsetHeight;
+
         n.tabIndex = i + 2;
-        nRect = n.getBoundingClientRect();
 
+        if (i > 0) {
+            ctx.lineTo(nRect.left - canLeft + nW, nRect.top - canTop);
+            ctx.stroke();
+        }
 
-        ctx.lineTo(nRect.left - canLeft + nW, nRect.top - canTop);
-        ctx.moveTo(0,nRect.top - canTop);
-        ctx.lineTo(canvas.width, nRect.top - canTop);
+        drawBoundingSquare(nRect, canTop, canLeft, i, len);
+
+        ctx.beginPath();
         ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
-        console.log(nW,nH,nRect.left,nRect.top,canLeft,canTop);
 
     }
     finalTabIndex = arr.length + 1;
@@ -173,7 +195,7 @@ var audio = new webkitAudioContext();
 function createOscillator(freq) {
     var attack = 0;
     var decay = 200;
-    var volume = 0.02;
+    var volume = 0.05;
     var gain = audio.createGain();
     var osc = audio.createOscillator();
 

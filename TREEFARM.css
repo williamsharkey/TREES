@@ -62,7 +62,8 @@ spool {
     position: absolute;
     border-radius: 50%;
     /*background-color: rebeccapurple;*/
-    border: 18px solid transparent;
+    padding: 10px;
+    border: 1px solid rgb(0,0,0);
     
 }
 
