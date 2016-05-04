@@ -4,6 +4,7 @@ var body = $('body');
 
 var finalTabIndex = 1;
 
+var showBoundBox = false;
 $('focus2').on('focus', ForwardWrap);
 
 function ForwardWrap() {
@@ -13,7 +14,7 @@ function ForwardWrap() {
 $('focus1').on('focus', backwardsWrap);
 
 function backwardsWrap() {
-    $('input[tabindex=${' + finalTabIndex + '}]').focus();
+    $('input[tabindex=' + finalTabIndex + ']').focus();
 }
 
 var tabFocus = false;
@@ -109,7 +110,6 @@ function drop(e) {
     var el = $(e.currentTarget);
     $dragging = null;
     el.removeAttr('unselectable').removeClass('draggable');
-    //drawLines();
 }
 
 
@@ -127,7 +127,7 @@ function sortH(a, b) {
 }
 
 
-function drawBoundingSquare(nRect, canTop, canLeft,i,n) {
+function drawBoundBox(nRect, canTop, canLeft,i,n) {
 
     ctx.beginPath();
     var topOfInput = Math.round(nRect.top - canTop) + 0.5;
@@ -177,8 +177,8 @@ function drawLines() {
             ctx.lineTo(nRect.left - canLeft + nW, nRect.top - canTop);
             ctx.stroke();
         }
-
-        drawBoundingSquare(nRect, canTop, canLeft, i, len);
+        if (showBoundBox)
+            drawBoundBox(nRect, canTop, canLeft, i, len);
 
         ctx.beginPath();
         ctx.strokeStyle = "black";

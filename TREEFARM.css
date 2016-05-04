@@ -9,12 +9,8 @@ html {
 }
 
 html {
-    background: ghostwhite;
-    /*height: 100%;*/
+    background: #2F0028;
     font-family: "Futura",sans-serif;
-    border: 0 solid #2F0028;
-    border-bottom-width: 100vh;
-    height: 200%;
 }
 
 head {
@@ -35,15 +31,17 @@ title {
     padding:28px 0 3px;
     -webkit-user-select: none;
     cursor: default;
-    position: absolute;
-    left: 0;
-    right: 0;
+    position: fixed;
+    transform-origin: left;
+    /*transform: translate(11%, -25%) rotate(90deg);*/
+    font-size: 131pt;
+    transform: translate(9%, -12%) rotate(69deg) skew(5deg, 21deg);
 }
 
 body {
     position: relative;
     height: 800px;
-    margin: 340px auto;
+    margin: 124px auto 0;
     width: 600px;
     border: 18px ridge #FFECFC;
     background: linear-gradient(
@@ -62,29 +60,33 @@ spool {
     position: absolute;
     border-radius: 50%;
     /*background-color: rebeccapurple;*/
-    padding: 10px;
-    border: 1px solid rgb(0,0,0);
+    padding: 18px;
+    border: 1px solid transparent;
+
     
 }
 
 spool:hover {
     background: ghostwhite;
     cursor: -webkit-grab;
+    border-color: black;
 }
 
 spool.draggable {
-    background: ghostwhite;
+    /*background: ghostwhite;*/
+    background: transparent;
     cursor: -webkit-grabbing!important;
 }
 
 spool.draggable input {
     border-color: transparent;
     /*background:transparent;*/
-    background: purple;
+    /*background: purple;*/
 }
 
 input {
-    border: 4px double #524E73;
+    border: 14px solid #CFADD0;
+    border-style: groove;
     width: 84px;
     height: 84px;
     border-radius: 50%;
