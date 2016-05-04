@@ -60,6 +60,11 @@ function preventFocusSteal(e) {
 
 body.on('mousedown', 'spool', preventFocusSteal);
 
+body.keypress(function(e) {
+    if(e.which == 13) {
+        $(':focus').blur().focus();
+    }
+});
 
 function makeCanvas() {
     var canvas = $('canvas')[0];
@@ -195,7 +200,7 @@ var audio = new webkitAudioContext();
 
 function createOscillator(freq) {
     var attack = 0;
-    var decay = 200;
+    var decay = 1200;
     var volume = 0.05;
     var gain = audio.createGain();
     var osc = audio.createOscillator();
