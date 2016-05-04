@@ -133,7 +133,7 @@ function drawBoundingSquare(nRect, canTop, canLeft,i,n) {
     var topOfInput = Math.round(nRect.top - canTop) + 0.5;
     ctx.moveTo(0, topOfInput);
     ctx.lineTo(canvas.width, topOfInput);
-    ctx.strokeStyle = "hsl(" + (360*i/n) + ",90%,80%)";
+    ctx.strokeStyle = "hsl(" + (360*i/n) + ",80%,86%)";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -181,6 +181,7 @@ function drawLines() {
         drawBoundingSquare(nRect, canTop, canLeft, i, len);
 
         ctx.beginPath();
+        ctx.strokeStyle = "black";
         ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
 
     }
