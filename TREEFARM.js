@@ -5,6 +5,9 @@ var body = $('body');
 var finalTabIndex = 1;
 
 var showBoundBox = false;
+
+var showCone = true;
+
 $('focus2').on('focus', ForwardWrap);
 
 function ForwardWrap() {
@@ -21,7 +24,7 @@ var tabFocus = false;
 
 body.on('focus', 'input', function(e) {
     if (!tabFocus) {
-        play(e.currentTarget.tabIndex - 2);
+        play(e.currentTarget.tabIndex - 2, e.currentTarget.getBoundingClientRect().left);
     }
     tabFocus = false;
 });
@@ -105,7 +108,7 @@ function drag(e) {
     var dOff = $dragging.offset();
     var offTop = dOff.top - e.pageY;
     var offLeft = dOff.left - e.pageX;
-    console.log({offTop:offTop, offLeft:offLeft});
+    //console.log({offTop:offTop, offLeft:offLeft});
 
 }
 
@@ -132,10 +135,10 @@ function sortH(a, b) {
 }
 
 
-function drawBoundBox(nRect, canTop, canLeft,i,n) {
+function drawBoundBox(el, center, radius, i, n) {
 
     ctx.beginPath();
-    var topOfInput = Math.round(nRect.top - canTop) + 0.5;
+    var topOfInput = Math.round(center.y - radius) + 0.5;
     ctx.moveTo(0, topOfInput);
     ctx.lineTo(canvas.width, topOfInput);
     ctx.strokeStyle = "hsl(" + (360*i/n) + ",80%,86%)";
@@ -143,19 +146,19 @@ function drawBoundBox(nRect, canTop, canLeft,i,n) {
     ctx.stroke();
 
     ctx.beginPath();
-    var botOfInput = Math.round(nRect.bottom - canTop) - 0.5;
+    var botOfInput = Math.round(center.y + radius) - 0.5;
     ctx.moveTo(0, botOfInput);
     ctx.lineTo(canvas.width, botOfInput);
     ctx.stroke();
 
     ctx.beginPath();
-    var leftOfInput = Math.round(nRect.left - canLeft) + 0.5;
+    var leftOfInput = Math.round(center.x - radius) + 0.5;
     ctx.moveTo(leftOfInput, 0);
     ctx.lineTo(leftOfInput, canvas.height);
     ctx.stroke();
 
     ctx.beginPath();
-    var rightOfInput = Math.round(nRect.right - canLeft) - 0.5;
+    var rightOfInput = Math.round(center.x + radius) - 0.5;
     ctx.moveTo(rightOfInput, 0);
     ctx.lineTo(rightOfInput, canvas.height);
     ctx.stroke();
@@ -165,42 +168,74 @@ function drawBoundBox(nRect, canTop, canLeft,i,n) {
 function drawLines() {
     var arr = $('spool').sort(sortH).toArray();
     var canvasRect = canvas.getBoundingClientRect();
-    var canLeft = canvasRect.left;
-    var canTop = canvasRect.top;
     var len = arr.length;
 
     for (var i = 0; i < len; i++) {
 
         var n = arr[i].getElementsByTagName('input')[0];
-        var nRect = n.getBoundingClientRect();
-        var nW = n.offsetWidth/2;
-        var nH = n.offsetHeight;
+        var el = n.getBoundingClientRect();
+        var radius = n.offsetWidth/2;
+
+        var center =
+        {
+            x: el.left - canvasRect.left + radius,
+            y: el.top - canvasRect.top + radius
+        };
 
         n.tabIndex = i + 2;
 
         if (i > 0) {
-            ctx.lineTo(nRect.left - canLeft + nW, nRect.top - canTop);
+            ctx.lineTo(center.x, center.y - radius);
             ctx.stroke();
         }
         if (showBoundBox)
-            drawBoundBox(nRect, canTop, canLeft, i, len);
+            drawBoundBox(el, center, radius, i, len);
+
+        if (showCone)
+            drawCone(center, radius, center.y/canvas.height, 2, 6);
 
         ctx.beginPath();
         ctx.strokeStyle = "black";
-        ctx.moveTo(nRect.left - canLeft + nW, nRect.top - canTop + nH);
+        ctx.moveTo(center.x, center.y + radius);
 
     }
     finalTabIndex = arr.length + 1;
     ctx.stroke();
 }
 
+function drawCone(center, radius, sweep, holdoff, reach) {
+    var ang = sweep*Math.PI;
+    var halfPI = Math.PI * 0.5;
+
+    var dy = -Math.sin(-ang - halfPI)*radius;
+    var dx = -Math.cos(ang -halfPI)*radius;
+    ctx.strokeStyle = "black";
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius*holdoff, - ang - halfPI, ang - halfPI);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(center.x+dx*holdoff, center.y-dy*holdoff);
+    ctx.lineTo(center.x+dx*reach, center.y-dy*reach);
+    ctx.stroke();
+
+
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius*reach,   - ang - halfPI, ang - halfPI);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(center.x-dx*holdoff, center.y-dy*holdoff);
+    ctx.lineTo(center.x-dx*reach, center.y-dy*reach);
+    ctx.stroke();
+}
 
 var audio = new webkitAudioContext();
 
 
-function createOscillator(freq) {
+function createOscillator(freq, decay) {
     var attack = 0;
-    var decay = 1200;
+    //var decay = 700;
     var volume = 0.05;
     var gain = audio.createGain();
     var osc = audio.createOscillator();
@@ -235,9 +270,9 @@ function int(str, defaultValue) {
     return retValue;
 }
 
-function play(i) {
+function play(i , decay) {
     var str = $('input[tabindex=2]').val();
     var scale = int(str, 12);
     var freq = 100 * Math.pow(2, (i - 2) / scale );
-    createOscillator(freq);
+    createOscillator(freq, decay);
 }
