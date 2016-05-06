@@ -41,7 +41,7 @@ function makeBox(e) {
         left: x - w / 2
     });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawLines();
+    buildRelationships();
     box.focus();
 }
 
@@ -100,7 +100,7 @@ function drag(e) {
                 left: x
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawLines();
+            buildRelationships();
         }
     }
 
@@ -164,43 +164,56 @@ function drawBoundBox(el, center, radius, i, n) {
     ctx.stroke();
 
 }
+function reprocess() {
+    var nodes = buildRelationships();
+    var nodeLen = nodes.length;
 
-function drawLines() {
+    finalTabIndex = nodeLen + 1
+}
+
+function buildRelationships() {
     var arr = $('spool').sort(sortH).toArray();
     var canvasRect = canvas.getBoundingClientRect();
     var len = arr.length;
-
+    var radius = arr[0].offsetWidth/2;
+    var nodes = [];
     for (var i = 0; i < len; i++) {
 
-        var n = arr[i].getElementsByTagName('input')[0];
-        var el = n.getBoundingClientRect();
-        var radius = n.offsetWidth/2;
+        var el = arr[i].getElementsByTagName('input')[0];
+        //el.tabIndex = i + 2;
+        var elRect = el.getBoundingClientRect();
+        nodes[i]= {
+            el: el,
+            elRect : elRect,
+            x: elRect.left - canvasRect.left + radius,
+            y: elRect.top - canvasRect.top + radius
 
-        var center =
-        {
-            x: el.left - canvasRect.left + radius,
-            y: el.top - canvasRect.top + radius
-        };
 
-        n.tabIndex = i + 2;
-
-        if (i > 0) {
-            ctx.lineTo(center.x, center.y - radius);
-            ctx.stroke();
         }
-        if (showBoundBox)
-            drawBoundBox(el, center, radius, i, len);
 
-        if (showCone)
-            drawCone(center, radius, center.y/canvas.height, 2, 6);
 
-        ctx.beginPath();
-        ctx.strokeStyle = "black";
-        ctx.moveTo(center.x, center.y + radius);
+
+
+        //
+        //if (i > 0) {
+        //    ctx.lineTo(center.x, center.y - radius);
+        //    ctx.stroke();
+        //}
+        //
+        //if (showBoundBox)
+        //    drawBoundBox(elRect, center, radius, i, len);
+        //
+        //if (showCone)
+        //    drawCone(center, radius, center.y/canvas.height, 2, 6);
+        //
+        //ctx.beginPath();
+        //ctx.strokeStyle = "black";
+        //ctx.moveTo(center.x, center.y + radius);
 
     }
-    finalTabIndex = arr.length + 1;
-    ctx.stroke();
+    //;
+    //ctx.stroke();
+    return nodes;
 }
 
 function drawCone(center, radius, sweep, holdoff, reach) {
