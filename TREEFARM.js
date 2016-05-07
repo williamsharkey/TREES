@@ -4,9 +4,9 @@ var body = $('body');
 
 var finalTabIndex = 1;
 
-var showBoundBox = true;
+var showBoundBox = false;
 
-var showCone = false;
+var showCone = true;
 
 $('focus2').on('focus', ForwardWrap);
 
@@ -75,7 +75,7 @@ function makeCanvas() {
     canvas.height = body.height();
     var ctx = canvas.getContext("2d");
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = "ghostwhite";
     ctx.lineJoin = "round";
     return {canvas, ctx};
 }
@@ -167,7 +167,7 @@ function drawBoundBox(el, center, radius, i, n) {
 
 
 function line(pointA, pointB) {
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = "ghostwhite";
     ctx.beginPath();
     //console.log(pointA);
     //console.log(pointB);
@@ -175,22 +175,6 @@ function line(pointA, pointB) {
     ctx.lineTo(pointB.x, pointB.y);
     ctx.stroke();
 }
-
-    //
-    //if (i > 0) {
-    //    ctx.lineTo(center.x, center.y - radius);
-    //    ctx.stroke();
-    //}
-    //
-    //if (showBoundBox)
-    //    drawBoundBox(elRect, center, radius, i, len);
-    //
-    //if (showCone)
-    //    drawCone(center, radius, center.y/canvas.height, 2, 6);
-    //
-    //ctx.beginPath();
-    //
-    //ctx.moveTo(center.x, center.y + radius);
 
 
 
@@ -209,8 +193,11 @@ function reprocess() {
         var source = nodes[i];
         var r = source.radius;
         source.el.tabIndex = i + 2;
+
         if (showCone) {
-            drawCone(source.center, r, sweep, holdoff, cutoff);
+            if (source.el.parentNode.classList.contains("draggable") ) {
+                drawCone(source.center, r, sweep, holdoff, cutoff);
+            }
         }
         for(var j = 0; j < nodeLen; j++) {
             if (j == i) continue;
@@ -288,7 +275,7 @@ function buildRelationships() {
         //    drawCone(center, radius, center.y/canvas.height, 2, 6);
         //
         //ctx.beginPath();
-        //ctx.strokeStyle = "black";
+        //ctx.strokeStyle = "ghostwhite";
         //ctx.moveTo(center.x, center.y + radius);
 
     }
@@ -303,7 +290,7 @@ function drawCone(center, radius, sweep, holdoff, reach) {
 
     var dy = -Math.sin(-ang - halfPI)*radius;
     var dx = -Math.cos(ang -halfPI)*radius;
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = "ghostwhite";
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius*holdoff, - ang - halfPI, ang - halfPI);
     ctx.stroke();
