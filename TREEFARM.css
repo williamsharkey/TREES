@@ -127,3 +127,11 @@ input:focus {
             /*inset 0 0 0 6px #8E8E8E;*/
     /*background: white;*/
 }
+
+.dest{
+    border-color: deeppink;
+}
+
+pre {
+    color: white;
+}

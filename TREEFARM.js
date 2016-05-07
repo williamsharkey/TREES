@@ -239,12 +239,25 @@ function reprocess() {
                         source.connectsTo.push(dest);
                         dest.connectsFrom.push(source);
                         line(source.top, dest.bottom);
+                        dest.el.classList.add('dest');
+                    } else {
+                        dest.el.classList.remove('dest');
                     }
                 }
             }
         }
     }
     finalTabIndex = nodeLen + 1
+    document.querySelector("pre").textContent = constructCode(nodes[nodeLen-1]);
+}
+
+function constructCode (node) {
+    var len = node.connectsTo.length;
+    var txt = "";
+    for (var i =0; i<len; i++) {
+        txt = txt + constructCode(node.connectsTo[i]);
+    }
+    return "(" + node.el.value + " " + txt + ")";
 }
 
 function buildRelationships() {
