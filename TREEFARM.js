@@ -8,6 +8,8 @@ var showBoundBox = false;
 
 var showCone = true;
 
+var $canvas = $('canvas');
+
 $('focus2').on('focus', ForwardWrap);
 
 function ForwardWrap() {
@@ -24,14 +26,27 @@ var tabFocus = false;
 
 body.on('focus', 'input', function(e) {
     if (!tabFocus) {
+        var x = e.currentTarget.value||"";
+        if (x.trim() === '') {
+            document.title = "\u00a0";
+        }else {
+            document.title = x;
+        }
+
+        //console.l?og(x);
+        //console.log(e.currentTarget.value+"");
         play(e.currentTarget.tabIndex - 2, e.currentTarget.getBoundingClientRect().left);
     }
     tabFocus = false;
 });
 
+function textEntered(e) {
+    document.title =  e.currentTarget.value;
+}
+
 function makeBox(e) {
     var box = $("<spool><input maxlength=8>");
-    $('canvas').after(box);
+    $canvas.after(box);
     var y = e.pageY;
     var x = e.pageX;
     var w = box.width();
@@ -43,6 +58,7 @@ function makeBox(e) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     reprocess();
     box.focus();
+    box[0].firstChild.oninput = textEntered;
 }
 
 function kill(e) {
@@ -64,6 +80,7 @@ function preventFocusSteal(e) {
 body.on('mousedown', 'spool', preventFocusSteal);
 
 body.keypress(function(e) {
+
     if(e.which == 13) {
         $(':focus').blur().focus();
     }
@@ -108,7 +125,6 @@ function drag(e) {
     var dOff = $dragging.offset();
     var offTop = dOff.top - e.pageY;
     var offLeft = dOff.left - e.pageX;
-    //console.log({offTop:offTop, offLeft:offLeft});
 
 }
 
@@ -258,29 +274,8 @@ function buildRelationships() {
             }
 
         };
-
-
-
-
-        //
-        //if (i > 0) {
-        //    ctx.lineTo(center.x, center.y - radius);
-        //    ctx.stroke();
-        //}
-        //
-        //if (showBoundBox)
-        //    drawBoundBox(elRect, center, radius, i, len);
-        //
-        //if (showCone)
-        //    drawCone(center, radius, center.y/canvas.height, 2, 6);
-        //
-        //ctx.beginPath();
-        //ctx.strokeStyle = "ghostwhite";
-        //ctx.moveTo(center.x, center.y + radius);
-
     }
-    //;
-    //ctx.stroke();
+
     return nodes;
 }
 

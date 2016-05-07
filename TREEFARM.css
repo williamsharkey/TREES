@@ -27,14 +27,13 @@ title {
     -webkit-text-fill-color: transparent;
     display: block;
     text-align: center;
-    padding: 25px 0 3px;
     -webkit-user-select: none;
     cursor: default;
-    position: fixed;
-    transform-origin: left;
     font-size: 131pt;
+    height: 1.32em;
     letter-spacing: 0.14em;
-    transform: translate(6.6%, -41.2%) rotate(69deg) skew(5deg, 21deg);
+    left: 0;
+    right: 0;
 }
 
 body {
