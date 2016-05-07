@@ -4,9 +4,9 @@ var body = $('body');
 
 var finalTabIndex = 1;
 
-var showBoundBox = false;
+var showBoundBox = true;
 
-var showCone = true;
+var showCone = false;
 
 $('focus2').on('focus', ForwardWrap);
 
@@ -41,7 +41,7 @@ function makeBox(e) {
         left: x - w / 2
     });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    buildRelationships();
+    reprocess();
     box.focus();
 }
 
@@ -100,7 +100,7 @@ function drag(e) {
                 left: x
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            buildRelationships();
+            reprocess();
         }
     }
 
@@ -164,10 +164,83 @@ function drawBoundBox(el, center, radius, i, n) {
     ctx.stroke();
 
 }
+
+
+function line(pointA, pointB) {
+    ctx.strokeStyle = "black";
+    ctx.beginPath();
+    //console.log(pointA);
+    //console.log(pointB);
+    ctx.moveTo(pointA.x, pointA.y);
+    ctx.lineTo(pointB.x, pointB.y);
+    ctx.stroke();
+}
+
+    //
+    //if (i > 0) {
+    //    ctx.lineTo(center.x, center.y - radius);
+    //    ctx.stroke();
+    //}
+    //
+    //if (showBoundBox)
+    //    drawBoundBox(elRect, center, radius, i, len);
+    //
+    //if (showCone)
+    //    drawCone(center, radius, center.y/canvas.height, 2, 6);
+    //
+    //ctx.beginPath();
+    //
+    //ctx.moveTo(center.x, center.y + radius);
+
+
+
 function reprocess() {
+    var sweep = .25;
+    var holdoff = 3;
+    var cutoff = 8;
     var nodes = buildRelationships();
     var nodeLen = nodes.length;
 
+    for(var i = 0; i < nodeLen; i++) {
+        nodes[i].connectsTo = [];
+        nodes[i].connectsFrom = [];
+    }
+    for(var i = 0; i < nodeLen; i++) {
+        var source = nodes[i];
+        var r = source.radius;
+        source.el.tabIndex = i + 2;
+        if (showCone) {
+            drawCone(source.center, r, sweep, holdoff, cutoff);
+        }
+        for(var j = 0; j < nodeLen; j++) {
+            if (j == i) continue;
+            var dest = nodes[j];
+            var dx = dest.center.x - source.center.x;
+            var dy = dest.center.y - source.center.y;
+
+            //console.log({dy:dy,dx:dx});
+
+            var dist = Math.sqrt( dx*dx + dy*dy);
+            if (dist > r*holdoff) {
+                if (dist < r*cutoff) {
+                    var pastHalf = (dx > 0) ? 0 : -0.5;
+                    var ang1 = (Math.atan(dy/dx) + (Math.PI * 0.5))/(2*Math.PI) ;//+ pastHalf;
+                    if (dx > 0) {
+                        var ang = ang1;
+                    } else {
+                        var ang = (ang1 * -1) + 0.5;
+                    }
+
+                    //console.log(ang);
+                    if (Math.abs(ang) < (0.5 * sweep)) {
+                        source.connectsTo.push(dest);
+                        dest.connectsFrom.push(source);
+                        line(source.top, dest.bottom);
+                    }
+                }
+            }
+        }
+    }
     finalTabIndex = nodeLen + 1
 }
 
@@ -175,21 +248,29 @@ function buildRelationships() {
     var arr = $('spool').sort(sortH).toArray();
     var canvasRect = canvas.getBoundingClientRect();
     var len = arr.length;
-    var radius = arr[0].offsetWidth/2;
+    var radius = arr[0].getElementsByTagName('input')[0].offsetWidth/2;
     var nodes = [];
     for (var i = 0; i < len; i++) {
-
         var el = arr[i].getElementsByTagName('input')[0];
-        //el.tabIndex = i + 2;
         var elRect = el.getBoundingClientRect();
         nodes[i]= {
             el: el,
             elRect : elRect,
-            x: elRect.left - canvasRect.left + radius,
-            y: elRect.top - canvasRect.top + radius
+            radius: radius,
+            center : {
+                x: elRect.left - canvasRect.left + radius,
+                y: elRect.top - canvasRect.top + radius
+            },
+            top : {
+                x: elRect.left - canvasRect.left + radius,
+                y: elRect.top - canvasRect.top
+            },
+            bottom :{
+                x: elRect.left - canvasRect.left + radius,
+                y: elRect.top - canvasRect.top + radius * 2
+            }
 
-
-        }
+        };
 
 
 
@@ -227,20 +308,19 @@ function drawCone(center, radius, sweep, holdoff, reach) {
     ctx.arc(center.x, center.y, radius*holdoff, - ang - halfPI, ang - halfPI);
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(center.x+dx*holdoff, center.y-dy*holdoff);
-    ctx.lineTo(center.x+dx*reach, center.y-dy*reach);
-    ctx.stroke();
+    var rightHoldoff = {x:center.x - dx*holdoff , y : center.y - dy*holdoff};
+    var rightReach = {x:center.x - dx*reach, y: center.y - dy*reach};
+    line(rightHoldoff,rightReach);
 
 
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius*reach,   - ang - halfPI, ang - halfPI);
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(center.x-dx*holdoff, center.y-dy*holdoff);
-    ctx.lineTo(center.x-dx*reach, center.y-dy*reach);
-    ctx.stroke();
+    var leftHoldoff= { x : center.x + dx*holdoff , y : center.y - dy*holdoff };
+    var leftReach ={ x : center.x + dx*reach, y: center.y - dy*reach };
+    line(leftHoldoff,leftReach);
+
 }
 
 var audio = new webkitAudioContext();
