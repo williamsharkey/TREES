@@ -1,6 +1,6 @@
 "use strict";
 
-var body = $('body');
+var $body = $('body');
 
 var finalTabIndex = 1;
 
@@ -24,7 +24,7 @@ function backwardsWrap() {
 
 var tabFocus = false;
 
-body.on('focus', 'input', function(e) {
+$body.on('focus', 'input', function(e) {
     if (!tabFocus) {
         var x = e.currentTarget.value||"";
         if (x.trim() === '') {
@@ -32,9 +32,6 @@ body.on('focus', 'input', function(e) {
         }else {
             document.title = x;
         }
-
-        //console.l?og(x);
-        //console.log(e.currentTarget.value+"");
         play(e.currentTarget.tabIndex - 2, e.currentTarget.getBoundingClientRect().left);
     }
     tabFocus = false;
@@ -44,18 +41,25 @@ function textEntered(e) {
     document.title =  e.currentTarget.value;
 }
 
-function makeBox(e) {
-    var box = $("<spool><input maxlength=8>");
-    $canvas.after(box);
-    var y = e.pageY;
-    var x = e.pageX;
-    var w = box.width();
-    var h = box.height();
-    box.offset({
-        top: y - h / 2,
-        left: x - w / 2
-    });
+function makeBox(evt) {
+    var box = $("<spool><input maxlength=8/><move>⟡</move><delete>✕</delete></spool>");
+
+    //var y = e.pageY;
+    //var x = e.pageX;
+    //var w = box.width();
+    //var h = box.height();
+    //box.offset({
+    //    top: y; - h / 2,
+    //    left: x; - w / 2
+    //});
+    var rect = canvas.getBoundingClientRect();
+    var x = (evt.clientX-rect.left)/(rect.right-rect.left)*canvas.width;
+    var y  = (evt.clientY-rect.top)/(rect.bottom-rect.top)*canvas.height
+
+    console.log({x:x, y:y});
+    box.offset({top:y, left:x});
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    $canvas.after(box);
     reprocess();
     box.focus();
     box[0].firstChild.oninput = textEntered;
@@ -71,15 +75,15 @@ function markTabFocused(e) {
     tabFocus = true;
 }
 
-body.on('click', makeBox).on('click', 'spool', kill);
+$body.on('click', 'canvas', makeBox).on('click', 'spool', kill);
 
 function preventFocusSteal(e) {
     e.preventDefault();
 }
 
-body.on('mousedown', 'spool', preventFocusSteal);
+$body.on('mousedown', 'spool', preventFocusSteal);
 
-body.keypress(function(e) {
+$body.keypress(function(e) {
 
     if(e.which == 13) {
         $(':focus').blur().focus();
@@ -87,9 +91,9 @@ body.keypress(function(e) {
 });
 
 function makeCanvas() {
-    var canvas = $('canvas')[0];
-    canvas.width = body.width();
-    canvas.height = body.height();
+    var canvas = document.querySelector('canvas');
+    canvas.width = $body.width();
+    canvas.height = $body.height();
     var ctx = canvas.getContext("2d");
     ctx.lineWidth = 1;
     ctx.strokeStyle = "ghostwhite";
@@ -99,41 +103,40 @@ function makeCanvas() {
 
 var {canvas,ctx} = makeCanvas();
 
-body.on("mousedown", "spool", drag).on("mouseup", ".draggable", drop);
-body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
+$body.on("mousedown", "move", drag).on("mouseup", drop);
+//body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
 
-function drag(e) {
-    var el = $(e.currentTarget);
-    el.attr('unselectable', 'on').addClass('draggable');
+var draggingEl = null;
+function drag(evt) {
+    console.log('drag');
+    draggingEl = evt.currentTarget.parentNode;
+    draggingEl.classList.add('dragging');
 
-    body.on("mousemove", mouseMoveDrag);
+    $body.on("mousemove", "canvas", mouseMoveDrag);
+
+    var handTop = draggingEl.offsetTop - evt.pageY;
+    var handLeft = draggingEl.offsetLeft - evt.pageX;
 
     function mouseMoveDrag(e) {
-        if ($dragging) {
-            var y = e.pageY + offTop;
-            var x = e.pageX + offLeft;
-            $dragging.offset({
-                top: y,
-                left: x
-            });
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            reprocess();
-        }
-    }
+        var y = e.pageY + handTop;
+        var x = e.pageX + handLeft;
+        draggingEl.offsetTop = y;
+        draggingEl.offsetLeft = x;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        reprocess();
 
-    $dragging = el;
-    var dOff = $dragging.offset();
-    var offTop = dOff.top - e.pageY;
-    var offLeft = dOff.left - e.pageX;
+    }
 
 }
 
-var $dragging = null;
+//var $dragging = null;
 
 function drop(e) {
-    var el = $(e.currentTarget);
-    $dragging = null;
-    el.removeAttr('unselectable').removeClass('draggable');
+    console.log("drop");
+    draggingEl.classList.remove('dragging');
+    //var el = $(e.currentTarget);
+    //$dragging = null;
+    //el.removeAttr('unselectable').removeClass('draggable');
 }
 
 
@@ -248,16 +251,29 @@ function reprocess() {
         }
     }
     finalTabIndex = nodeLen + 1
-    document.querySelector("pre").textContent = constructCode(nodes[nodeLen-1]);
+    document.querySelector(".spression").textContent = constructSpression(nodes[nodeLen-1]);
+    document.querySelector(".js").textContent = constructJS(nodes[nodeLen-1]);
 }
 
-function constructCode (node) {
+function constructSpression (node) {
     var len = node.connectsTo.length;
     var txt = "";
     for (var i =0; i<len; i++) {
-        txt = txt + constructCode(node.connectsTo[i]);
+        txt = txt + constructSpression(node.connectsTo[i]);
     }
     return "(" + node.el.value + " " + txt + ")";
+}
+
+function constructJS (node) {
+    var len = node.connectsTo.length;
+    var txt = "";
+    for (var i =0; i<len; i++) {
+        txt = txt + constructJS(node.connectsTo[i]);
+        if (i < (len - 1)) {
+            txt = txt + ", ";
+        }
+    }
+    return node.el.value + "( " + txt + " )";
 }
 
 function buildRelationships() {
