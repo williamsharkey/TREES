@@ -39,11 +39,13 @@ body {
 }
 canvas {
     display: block;
-    height:600px;
+    height:602px;
+    width: 1002px;
+    image-rendering: pixelated;
     border: 1px dashed darkgray;
 }
 input {
-    border: 1px dashed white;
+    border: 1px dotted white;
     width: 88px;
     height: 88px;
     border-radius: 50%;
@@ -55,6 +57,21 @@ input {
     color: #4DFFD1;
     letter-spacing: .05em;
     display: block;
+}
+input:hover{
+    animation: spark 60s infinite;
+}
+@keyframes spark {
+    0% {  transform: rotate(0deg)  }
+    100% {  transform: rotate(360deg)  }
+}
+table {
+    color:white;
+    border-collapse: collapse;
+    margin: 16px auto;
+}
+td, th {
+    border: 1px solid white;
 }
 
 spool {
@@ -69,20 +86,9 @@ spool.dragging {
     cursor: -moz-grabbing!important;
 }
 
-move{
-    top: -2px;
-    left: 34px;
-    border-top-width: 0!important;
-    cursor: -webkit-grab;
-    cursor: -moz-grab;
-}
 
-delete{
-    right: -8px;
-    top: 1px;
-    cursor: pointer;
-}
 move, delete {
+    display: none;
     width: 17px;
     border-radius: 46%;
     font-weight: 100;
@@ -96,7 +102,26 @@ move, delete {
     color: #FFC0C0;
     border: 1px dotted;
     -webkit-user-select: none;
+}
+move{
+    top: 1px;
+    left: 31px;
+    border-top-width: 0!important;
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+    color: #29DCFD;
+}
 
+delete{
+    right: -8px;
+    top: 1px;
+    cursor: pointer;
+    border:none;
+}
+
+spool:hover move, spool:hover delete{
+    display:block;
+    animation: spark 60s infinite;
 }
 input:focus {
     outline: none;

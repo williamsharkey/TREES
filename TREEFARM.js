@@ -43,23 +43,39 @@ function textEntered(e) {
 
 function makeBox(evt) {
     var box = $("<spool><input maxlength=8/><move>⟡</move><delete>✕</delete></spool>");
-
+    $canvas.after(box);
     //var y = e.pageY;
     //var x = e.pageX;
-    //var w = box.width();
-    //var h = box.height();
+    var w = box.width();
+    var h = box.height();
     //box.offset({
     //    top: y; - h / 2,
     //    left: x; - w / 2
     //});
-    var rect = canvas.getBoundingClientRect();
-    var x = (evt.clientX-rect.left)/(rect.right-rect.left)*canvas.width;
-    var y  = (evt.clientY-rect.top)/(rect.bottom-rect.top)*canvas.height
+    var canvasRect = canvas.getBoundingClientRect();
+
+    var xS = canvas.width / (canvasRect.right-canvasRect.left);
+    var yS = canvas.height / (canvasRect.bottom-canvasRect.top);
+ //   var x = Math.floor ((evt.clientX-canvasRect.left)/(canvasRect.right-canvasRect.left)*canvas.width);
+   // var y  =Math.floor( (evt.clientY-canvasRect.top)/(canvasRect.bottom-canvasRect.top)*canvas.height);
+
+    var x = Math.floor (evt.pageX);
+    var y  =Math.floor( evt.pageY);
+
+
+    document.getElementById("boxWidth").innerHTML = w;
+    document.getElementById("boxHeight").innerHTML = h;
+    document.getElementById("evtClientX").innerHTML = evt.clientX;
+    document.getElementById("evtClientY").innerHTML = evt.clientY;
+    document.getElementById("canvasRectLeft").innerHTML = canvasRect.left;
+    document.getElementById("canvasRectTop").innerHTML = canvasRect.top;
+    document.getElementById("canvasWidth").innerHTML = canvas.width;
+    document.getElementById("canvasHeight").innerHTML = canvas.height;
 
     console.log({x:x, y:y});
     box.offset({top:y, left:x});
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    $canvas.after(box);
+
     reprocess();
     box.focus();
     box[0].firstChild.oninput = textEntered;
@@ -92,8 +108,8 @@ $body.keypress(function(e) {
 
 function makeCanvas() {
     var canvas = document.querySelector('canvas');
-    canvas.width = $body.width();
-    canvas.height = $body.height();
+    //canvas.width = $body.width();
+    //canvas.height = $body.height();
     var ctx = canvas.getContext("2d");
     ctx.lineWidth = 1;
     ctx.strokeStyle = "ghostwhite";
@@ -104,10 +120,19 @@ function makeCanvas() {
 var {canvas,ctx} = makeCanvas();
 
 $body.on("mousedown", "move", drag).on("mouseup", drop);
-//body.on("mousedown", "input", kill).on("mouseup", ".draggable", kill);
+$body.on("mousedown", "input", kill)
+    //$body.on("mouseup", ".draggable", kill);
+
+$body.on("mousedown", "delete", deleteSpool);
+
+function deleteSpool(evt) {
+    var spool = evt.currentTarget.parentNode;
+    spool.parentNode.removeChild(spool);
+}
 
 var draggingEl = null;
 function drag(evt) {
+
     console.log('drag');
     draggingEl = evt.currentTarget.parentNode;
     draggingEl.classList.add('dragging');
@@ -118,6 +143,12 @@ function drag(evt) {
     var handLeft = draggingEl.offsetLeft - evt.pageX;
 
     function mouseMoveDrag(e) {
+        if (!draggingEl)
+        {
+            console.log("nothing to drag");
+            return;
+
+        }
         var y = e.pageY + handTop;
         var x = e.pageX + handLeft;
         draggingEl.offsetTop = y;
@@ -132,7 +163,10 @@ function drag(evt) {
 //var $dragging = null;
 
 function drop(e) {
+    if (! draggingEl) return;
+
     console.log("drop");
+
     draggingEl.classList.remove('dragging');
     //var el = $(e.currentTarget);
     //$dragging = null;
@@ -185,19 +219,27 @@ function drawBoundBox(el, center, radius, i, n) {
 }
 
 
-function line(pointA, pointB) {
+function line(pointA, pointB, scaling) {
     ctx.strokeStyle = "ghostwhite";
+    ctx.setLineDash([1,10]);
     ctx.beginPath();
     //console.log(pointA);
     //console.log(pointB);
-    ctx.moveTo(pointA.x, pointA.y);
-    ctx.lineTo(pointB.x, pointB.y);
+    ctx.moveTo(Math.floor(pointA.x * scaling.xS)+.5, Math.floor( pointA.y * scaling.yS)+.5);
+    ctx.lineTo(Math.floor(pointB.x * scaling.xS)+.5, Math.floor(pointB.y * scaling.yS)+.5);
     ctx.stroke();
 }
 
+function getScaling(){
+    var canvasRect = canvas.getBoundingClientRect();
 
+    var xS = canvas.width / (canvasRect.right-canvasRect.left);
+    var yS = canvas.height / (canvasRect.bottom-canvasRect.top);
+    return {xS:xS, yS:yS};
+}
 
 function reprocess() {
+    var scaling = getScaling();
     var sweep = .25;
     var holdoff = 3;
     var cutoff = 8;
@@ -241,7 +283,7 @@ function reprocess() {
                     if (Math.abs(ang) < (0.5 * sweep)) {
                         source.connectsTo.push(dest);
                         dest.connectsFrom.push(source);
-                        line(source.top, dest.bottom);
+                        line(source.top, dest.bottom, scaling);
                         dest.el.classList.add('dest');
                     } else {
                         dest.el.classList.remove('dest');
